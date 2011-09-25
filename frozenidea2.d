@@ -144,7 +144,7 @@ class IRCbot {
 	}
 	
 	/// Parse message from string into structure Msg
-	private final Msg parseMsg(string line){
+	protected final Msg parseMsg(string line){
 		Msg m;
 		
 		line = line[1 .. $]; // remove : from msg
@@ -165,7 +165,7 @@ class IRCbot {
 	}
 	
 	// http://www.irchelp.org/irchelp/rfc/chapter6.html#c6_2
-	private void logic(Msg m){
+	protected void logic(Msg m){
 		if (m.type == "NOTICE AUTH" && m.msg == "*** No Ident response"){
 			if (this.password != "")
 				this.socketSendLine("PASS " ~ this.password);
@@ -271,7 +271,6 @@ class IRCbot {
 	}
 	/// Called when connected and logged to the server.
 	public void onServerConnected(){
-		this.join("#testchan");
 	}
 	/// Called when disconnected from server.
 	public void onConnectionClose(){
@@ -282,7 +281,6 @@ class IRCbot {
 	 * Look at this.channels[chan] = [nick, array];
 	*/
 	public void onChannelJoin(string chan){
-		writeln("Nicks: ", this.channels[chan]);
 	}
 	/// Called if anyone post something into chan.
 	public void onChannelMessage(string chan, string from, string message){
