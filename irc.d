@@ -1,19 +1,18 @@
 /**
+ * FrozenIdea2
+ * 
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.1.0
+ * Version: 0.2.0
  * Date:    25.09.2011
  * 
  * Copyright: 
  *     This work is licensed under a CC BY.
  *     http://creativecommons.org/licenses/by/3.0/
 */
-import std.stdio;
-
 import std.socket;
 import std.algorithm : remove;
-//~ import std.array;
 import std.string;
 
 
@@ -175,10 +174,11 @@ class IRCbot {
 			this.socketSendLine("NICK " ~ this.nickname);
 			
 			this.onServerConnection();
-		}
-		else if (m.type.startsWith("376")) // end of motd
+			
+		}else if (m.type.startsWith("376")){ // end of motd
 			this.onServerConnected();
-		else if (m.type.startsWith("353")){ // chan join
+			
+		}else if (m.type.startsWith("353")){ // nick list
 			string chan_name = m.type[m.type.indexOf("#") .. $];
 			
 			// check if chan is in chanlist
@@ -186,18 +186,83 @@ class IRCbot {
 			if (chan_name !in this.channels)
 				new_chan = true;
 			
+			this.channels.remove(chan_name);
 			foreach(nick; m.msg.split())
 				this.channels[chan_name] ~= nick;
 			
 			if (new_chan)
 				onChannelJoin(chan_name);
+				
 		}else if (m.type.startsWith("PRIVMSG")){ // msg
 			if (m.type.indexOf("#") > 0)
 				this.onChannelMessage(m.type.split()[$-1], m.from, m.msg);
 			else
 				this.onPrivateMessage(m.type.split()[$-1], m.msg);
-		}else if (m.type.startsWith("404")){ // kicked from chan
+				
+		}else if (m.type.startsWith("404")){  // kicked from chan
 			this.channels.remove(m.type.split()[$-1]);
+			
+		}else if (m.type.startsWith("JOIN")){ // join msg
+			string nick = m.from[0 .. m.from.indexOf("!")];
+			string chan_name = m.msg;
+			
+			// okay, ugly
+			if (nick != this.nickname){
+				int nick_index = 0;
+				bool found = false;
+				foreach(n; this.channels[m.msg]){ // add only nick thet aren't added yet
+					if (n == nick){
+						found = true;
+						break;
+					}
+					nick_index++;
+				}
+				
+				if (!found)
+					this.channels[m.msg] ~= nick;
+				
+				this.onSomebodyJoinedChan(m.msg, nick);
+			}
+			
+		}else if (m.type.startsWith("PART")){ // part message
+			string chan = m.type.split()[$-1];
+			string nick = m.from[0 .. m.from.indexOf("!")];
+			
+			if (nick != this.nickname){
+				int nick_index = 0;
+				bool found = false;
+				foreach(n; this.channels[chan]){
+					if (n == nick){
+						found = true;
+						break;
+					}
+					nick_index++;
+				}
+				
+				if (found) // remove nick from chanlist array
+					this.channels[chan] = this.channels[chan].remove(nick_index);
+				
+				this.onSomebodyLeavedChan(chan, nick);
+			}
+			
+		}else if (m.type.startsWith("QUIT")){ // quit message
+			string quit_nick =  m.from[0 .. m.from.indexOf("!")];
+			
+			// remove nick from all chans
+			int index = 0;
+			foreach(chan, nicks; this.channels){
+				index = 0;
+				foreach(nick; nicks){
+					if (nick == quit_nick){
+						this.channels[chan] = this.channels[chan].remove(index);
+						this.onSomebodyLeavedChan(chan, quit_nick);
+						break;
+					}
+					index++;
+				}
+			}
+			
+			this.onSomebodyQuit(quit_nick);
 		}
 	}
 	
@@ -206,6 +271,7 @@ class IRCbot {
 	}
 	/// Called when connected and logged to the server.
 	public void onServerConnected(){
+		this.join("#testchan");
 	}
 	/// Called when disconnected from server.
 	public void onConnectionClose(){
@@ -220,17 +286,17 @@ class IRCbot {
 	}
 	/// Called if anyone post something into chan.
 	public void onChannelMessage(string chan, string from, string message){
-		writeln(chan, from, message);
 	}
 	/// Called when privmsg received.
 	public void onPrivateMessage(string from, string message){
 	}
-}
-
-
-int main(string[] args){
-	IRCbot b = new IRCbot("FrozenIdea2", "irc.2600.net", 6667);
-	b.run();
-	
-	return 0;
+	/// Called when somebody join to the chan.
+	public void onSomebodyJoinedChan(string chan, string who){
+	}
+	/// Called when somebody leaves channel.
+	public void onSomebodyLeavedChan(string chan, string who){
+	}
+	/// Called when somebody quit.
+	public void onSomebodyQuit(string who){
+	}
 }
