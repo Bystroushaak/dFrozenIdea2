@@ -105,6 +105,13 @@ class IRCbot {
 		string msg;
 		string msg_queue;
 		
+		// send user information
+		if (this.password != "")
+			this.socketSendLine("PASS " ~ this.password);
+		
+		this.socketSendLine("USER " ~ this.nickname ~ " 0 0 :" ~ this.real_name);
+		this.socketSendLine("NICK " ~ this.nickname);
+		
 		// connection loop
 		for (;;chk.reset()){
 			chk.add(this.connection);
@@ -166,16 +173,7 @@ class IRCbot {
 	
 	// http://www.irchelp.org/irchelp/rfc/chapter6.html#c6_2
 	protected void logic(Msg m){
-		if (m.type == "NOTICE AUTH" && m.msg == "*** No Ident response"){
-			if (this.password != "")
-				this.socketSendLine("PASS " ~ this.password);
-			
-			this.socketSendLine("USER " ~ this.nickname ~ " 0 0 :" ~ this.real_name);
-			this.socketSendLine("NICK " ~ this.nickname);
-			
-			this.onServerConnection();
-			
-		}else if (m.type.startsWith("376")){ // end of motd
+		if (m.type.startsWith("376")){ // end of motd
 			this.onServerConnected();
 			
 		}else if (m.type.startsWith("353")){ // nick list
@@ -266,9 +264,6 @@ class IRCbot {
 		}
 	}
 	
-	/// Called when connected (but not logged!) to the server.
-	public void onServerConnection(){
-	}
 	/// Called when connected and logged to the server.
 	public void onServerConnected(){
 	}
