@@ -4,8 +4,8 @@
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.2.0
- * Date:    25.09.2011
+ * Version: 0.3.0
+ * Date:    30.09.2011
  * 
  * Copyright: 
  *     This work is licensed under a CC BY.
