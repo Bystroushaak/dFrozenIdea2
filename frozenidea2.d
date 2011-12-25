@@ -4,8 +4,8 @@
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.3.0
- * Date:    30.09.2011
+ * Version: 0.4.0
+ * Date:    25.12.2011
  * 
  * Copyright: 
  *     This work is licensed under a CC BY.
@@ -26,6 +26,15 @@ private struct Msg{
 }
 
 
+/// Throw this for quit
+class QuitException : Exception{
+	this(string msg){
+		super(msg);
+	}
+}
+
+
+///
 class IRCbot {
 	protected string nickname;
 	protected TcpSocket connection;
@@ -92,6 +101,15 @@ class IRCbot {
 		this.socketSendLine("PART " ~ chan);
 	}
 	
+	///
+	public void quit(){
+		foreach(key, val; this.channels){
+			this.part(key);
+		}
+		
+		throw new QuitException("Quit");
+	}
+	
 	/**
 	 * Main method of the class. 
 	*/ 
@@ -99,7 +117,7 @@ class IRCbot {
 		SocketSet chk = new SocketSet();
 		
 		int read;
-		char buff[1024];;
+		char buff[1024];
 		
 		int io_endl;
 		string msg;
@@ -131,7 +149,14 @@ class IRCbot {
 					if (msg.startsWith("PING"))
 						this.socketSendLine("PONG " ~ msg.split()[1].strip());
 					else{
-						this.logic(parseMsg(msg));
+						try{
+							this.logic(parseMsg(msg));
+						}catch(QuitException e){
+							this.connection.close();
+							this.onConnectionClose();
+							
+							return;
+						}
 					}
 					
 					// remove message from queue
