@@ -4,16 +4,19 @@
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.4.0
- * Date:    25.12.2011
+ * Version: 0.4.1
+ * Date:    29.12.2011
  * 
  * Copyright: 
  *     This work is licensed under a CC BY.
  *     http://creativecommons.org/licenses/by/3.0/
 */
+module frozenidea2;
+
 import std.socket;
 import std.algorithm : remove;
 import std.string;
+import std.algorithm : countUntil;
 
 
 const string ENDL = "\r\n";
@@ -245,6 +248,14 @@ class IRCbot {
 					this.channels[m.msg] ~= nick;
 				
 				this.onSomebodyJoinedChan(m.msg, nick);
+			}
+		}else if (m.type == "NICK"){ // rename message
+			string old_nick = m.from[0 .. m.from.indexOf("!")];
+			
+			int io;
+			foreach(chan, val; this.channels){
+				if ((io = channels[chan].countUntil(old_nick)) >= 0)
+					channels[chan][io] = m.msg;
 			}
 			
 		}else if (m.type.startsWith("PART")){ // part message
