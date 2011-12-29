@@ -4,7 +4,7 @@
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.4.1
+ * Version: 0.4.2
  * Date:    29.12.2011
  * 
  * Copyright: 
@@ -80,6 +80,11 @@ class IRCbot {
 	/// Join bot to the chan (have to begin with '#').
 	public final void join(string chan){
 		this.socketSendLine("JOIN " ~ chan);
+	}
+	
+	/// Rename bot to new_name
+	public final void rename(string new_name){
+		this.socketSendLine("RENAME " ~ new_name.strip());
 	}
 	
 	/**
@@ -258,6 +263,7 @@ class IRCbot {
 					channels[chan][io] = m.msg;
 			}
 			
+			this.onUserRenamed(old_nick, m.msg);
 		}else if (m.type.startsWith("PART")){ // part message
 			string chan = m.type.split()[$-1];
 			string nick = m.from[0 .. m.from.indexOf("!")];
@@ -321,6 +327,9 @@ class IRCbot {
 	}
 	/// Called when somebody join to the chan.
 	public void onSomebodyJoinedChan(string chan, string who){
+	}
+	/// Called when user renames himself
+	public void onUserRenamed(string old_name, string new_name){
 	}
 	/// Called when somebody leaves channel.
 	public void onSomebodyLeavedChan(string chan, string who){
