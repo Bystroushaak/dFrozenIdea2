@@ -4,8 +4,8 @@
  * Simple event driven IRC bot.
  * 
  * Author:  Bystroushaak (bystrousak@kitakitsune.org)
- * Version: 0.4.2
- * Date:    29.12.2011
+ * Version: 0.4.3
+ * Date:    17.01.2012
  * 
  * Copyright: 
  *     This work is licensed under a CC BY.
@@ -189,17 +189,16 @@ class IRCbot {
 		
 		line = line[1 .. $]; // remove : from msg
 		
-		if (line.indexOf(":") > 0)
-			m.msg = line[line.indexOf(":") + 1 .. $].stripRight();
-		else
+		int ioc; // index of colon
+		if ((ioc = line.indexOf(":")) > 0){
+			m.msg = line[ioc + 1 .. $].stripRight();
+			m.type = line[line.indexOf(" ") + 1 .. ioc].stripRight();
+		}else{
 			m.msg = "";
+			m.type = line[line.indexOf(" ") + 1 .. $].stripRight();
+		}
 		
 		m.from = line[0 .. line.indexOf(" ")].stripRight();
-		
-		if (line.indexOf(":") > 0)
-			m.type = line[line.indexOf(" ") + 1 .. line.indexOf(":")].stripRight();
-		else
-			m.type = line[line.indexOf(" ") + 1 .. $].stripRight();
 		
 		return m;
 	}
